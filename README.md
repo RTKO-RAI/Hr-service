@@ -33,7 +33,7 @@ Before running the application, configure your PostgreSQL database credentials:
 > File: `src/main/resources/application.properties`
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/hr_service
+spring.datasource.url=jdbc:postgresql://localhost:5432/your_hr_service_db
 spring.datasource.username=your_db_user
 spring.datasource.password=your_db_password
 
