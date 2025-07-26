@@ -1,0 +1,305 @@
+openapi: 3.0.1
+info:
+  title: HR Service API
+  version: 1.1.0
+  description: |
+    API for managing employee leave requests with support for leave policies,
+    remaining leave days per leave type, and status updates.
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local development server
+
+paths:
+  /leaves:
+    get:
+      summary: Get all leave requests
+      tags:
+        - LeaveRequests
+      responses:
+        '200':
+          description: List of all leave requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveRequest'
+    post:
+      summary: Create a new leave request
+      tags:
+        - LeaveRequests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLeaveRequestDto'
+      responses:
+        '201':
+          description: Leave request created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '400':
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /leaves/{id}:
+    get:
+      summary: Get a leave request by ID
+      tags:
+        - LeaveRequests
+      parameters:
+        - name: id
+          in: path
+          description: Leave request ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Leave request found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '404':
+          description: Leave request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /leaves/employee/{employeeId}:
+    get:
+      summary: Get all leave requests for a specific employee
+      tags:
+        - LeaveRequests
+      parameters:
+        - name: employeeId
+          in: path
+          description: Employee identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of leave requests for the employee
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveRequest'
+
+  /leaves/{id}/days:
+    get:
+      summary: Calculate the number of days for a leave request
+      tags:
+        - LeaveRequests
+      parameters:
+        - name: id
+          in: path
+          description: Leave request ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Number of leave days
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  numberOfDays:
+                    type: integer
+                    example: 5
+        '404':
+          description: Leave request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /leaves/{id}/status:
+    put:
+      summary: Update the status of a leave request
+      tags:
+        - LeaveRequests
+      parameters:
+        - name: id
+          in: path
+          description: Leave request ID
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/LeaveStatus'
+              required:
+                - status
+      responses:
+        '200':
+          description: Status updated successfully
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Leave request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /leaves/employee/{employeeId}/remaining:
+    get:
+      summary: Get remaining leave days per leave type for an employee
+      tags:
+        - LeaveRequests
+      parameters:
+        - name: employeeId
+          in: path
+          description: Employee identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Remaining leave days by leave type
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                example:
+                  ANNUAL: 10
+                  SICK: 7
+                  UNPAID: 999999
+        '404':
+          description: Employee not found or no leave data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    LeaveRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        employeeId:
+          type: string
+          example: "emp-456"
+        type:
+          $ref: '#/components/schemas/LeaveType'
+        startDate:
+          type: string
+          format: date
+          example: "2025-08-01"
+        endDate:
+          type: string
+          format: date
+          example: "2025-08-05"
+        status:
+          $ref: '#/components/schemas/LeaveStatus'
+
+    CreateLeaveRequestDto:
+      type: object
+      required:
+        - employeeId
+        - type
+        - startDate
+        - endDate
+      properties:
+        employeeId:
+          type: string
+          example: "emp-456"
+        type:
+          $ref: '#/components/schemas/LeaveType'
+        startDate:
+          type: string
+          format: date
+          example: "2025-08-01"
+        endDate:
+          type: string
+          format: date
+          example: "2025-08-05"
+
+    LeaveType:
+      type: string
+      enum:
+        - ANNUAL
+        - SICK
+        - UNPAID
+
+    LeaveStatus:
+      type: string
+      enum:
+        - PENDING
+        - APPROVED
+        - REJECTED
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-07-26T14:22:31Z"
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: "Not Found"
+        message:
+          type: string
+          example: "Leave request with ID 123 not found"
+        path:
+          type: string
+          example: "/api/leaves/123"
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-07-26T14:22:31Z"
+        status:
+          type: integer
+          example: 400
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "startDate"
+              message:
+                type: string
+                example: "must not be null"
+        path:
+          type: string
+          example: "/api/leaves"
+
