@@ -2,8 +2,10 @@ package dev.rtko_ai.hr_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+
+
 @Entity
-@Table(name = "leave_requests")
+@Table(name = "leave")
 @Getter
 @Setter
 @NoArgsConstructor
