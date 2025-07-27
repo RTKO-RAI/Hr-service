@@ -44,6 +44,7 @@ public class LeaveServiceImpl implements LeaveService {
             throw new IllegalArgumentException("Overlapping approved leave request exists for this period.");
         }
 
+
         Leave leave = Leave.builder()
                 .employeeId(dto.getEmployeeId())
                 .type(dto.getType())
