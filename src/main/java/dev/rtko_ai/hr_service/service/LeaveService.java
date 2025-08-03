@@ -10,6 +10,6 @@ import java.util.Map;
 public interface LeaveService {
     Leave createLeave(CreateLeaveRequestDto dto);
     Leave updateLeaveStatus(Long leaveId, LeaveStatus newStatus);
-    Map<String, Integer> getRemainingLeaveDays(Long employeeId);
+    Map<String, Object> getRemainingLeaveDays(Long employeeId);
     List<Leave> getAllLeaves();
 }

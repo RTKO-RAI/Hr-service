@@ -37,7 +37,7 @@ public class LeaveController {
     }
 
     @GetMapping("/employee/{employeeId}/remaining")
-    public ResponseEntity<Map<String, Integer>> getRemainingDays(@PathVariable Long employeeId) {
+    public ResponseEntity<Map<String, Object>> getRemainingDays(@PathVariable Long employeeId) {
         return ResponseEntity.ok(leaveService.getRemainingLeaveDays(employeeId));
     }
 }

@@ -13,7 +13,7 @@ import java.time.LocalDate;
 
 public class CreateLeaveRequestDto {
     @NotNull(message = "Employee ID must not be null")
-    private Long employeeId;
+    private Long employeeId = 123L;
 
     @NotNull(message = "Leave type must be specified")
     private LeaveType type;

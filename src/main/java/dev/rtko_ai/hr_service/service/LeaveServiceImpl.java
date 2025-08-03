@@ -21,6 +21,7 @@ import java.util.*;
 public class LeaveServiceImpl implements LeaveService {
 
     private final LeaveRepository leaveRepository;
+    private final LeavePolicyService leavePolicyService;
     private static final Logger log = LoggerFactory.getLogger(LeaveServiceImpl.class);
 
     @Override
@@ -67,14 +68,10 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public Map<String, Integer> getRemainingLeaveDays(Long employeeId) {
+    public Map<String, Object> getRemainingLeaveDays(Long employeeId) {
         List<Leave> approvedLeaves = leaveRepository.findByEmployeeId(employeeId).stream()
                 .filter(leave -> leave.getStatus() == LeaveStatus.APPROVED)
                 .toList();
-
-        if (approvedLeaves.isEmpty()) {
-            throw new ResourceNotFoundException("Leave request with ID " + employeeId + " not found");
-        }
 
         Map<LeaveType, Integer> usedDays = new EnumMap<>(LeaveType.class);
         for (Leave leave : approvedLeaves) {
@@ -82,16 +79,21 @@ public class LeaveServiceImpl implements LeaveService {
             usedDays.merge(leave.getType(), days, Integer::sum);
         }
 
-        Map<String, Integer> remaining = new HashMap<>();
+        Map<String, Object> remaining = new HashMap<>();
         for (LeaveType type : LeaveType.values()) {
-            int allowed = getMaxAllowed(type);
+            int allowed = leavePolicyService.getAllowedDays(type);
             int used = usedDays.getOrDefault(type, 0);
-            int left = Math.max(allowed - used, 0);
-            remaining.put(type.name().toLowerCase(), left);
+
+            Object remainingDays = (allowed == Integer.MAX_VALUE)
+                    ? "Unlimited"
+                    : Math.max(allowed - used, 0);
+
+            remaining.put(type.name().toLowerCase(), remainingDays);
         }
 
         return remaining;
     }
+
 
     @Override
     public List<Leave> getAllLeaves() {
@@ -101,6 +103,7 @@ public class LeaveServiceImpl implements LeaveService {
         return switch (type) {
             case ANNUAL -> 20;
             case SICK -> 10;
+            case PERSONAL_LEAVE -> 1;
             case UNPAID -> Integer.MAX_VALUE;
         };
     }
